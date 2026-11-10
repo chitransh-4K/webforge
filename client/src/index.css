@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-main: #1e1e1e;
+    --bg-sidebar: #252526;
+    --border-color: #3c3c3c;
+    --text-color: #cccccc;
+    --accent-blue: #007acc;
+  }
+
+  .light {
+    --bg-main: #ffffff;
+    --bg-sidebar: #f3f3f3;
+    --border-color: #e5e5e5;
+    --text-color: #333333;
+    --accent-blue: #007acc;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-color);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(121, 121, 121, 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.7);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.2);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.4);
+}
+
+/* Resizable Panels separator styles */
+[data-panel-resize-handle-enabled] {
+  transition: background-color 0.15s ease;
+}
+
+[data-panel-resize-handle-enabled]:hover,
+[data-panel-resize-handle-enabled][data-resize-handle-state="drag"] {
+  background-color: #007acc !important;
+}
