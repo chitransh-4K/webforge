@@ -77,7 +77,12 @@ router.post(
 
 // Logout
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
+  const isProd = process.env.NODE_ENV === 'production';
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+  });
   res.json({ message: 'Logged out' });
 });
 

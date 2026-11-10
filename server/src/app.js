@@ -6,9 +6,18 @@ import { csrfProtection } from './middleware/csrf.middleware.js';
 import { generalLimiter, authLimiter, aiLimiter } from './middleware/rateLimit.middleware.js';
 
 const app = express();
+
+// Trust reverse proxy for secure cookies on Render / Railway / Heroku
+app.set('trust proxy', 1);
+
 app.use(generalLimiter);
 
-const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const rawClientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  ...rawClientOrigin.split(',').map((s) => s.trim()),
+].filter(Boolean);
 
 // Security headers
 app.use(
@@ -18,10 +27,20 @@ app.use(
   })
 );
 
-// Strict CORS
+// Flexible and secure CORS
 app.use(
   cors({
-    origin: clientOrigin,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com')
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

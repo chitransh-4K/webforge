@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
 export async function apiClient(endpoint, options = {}) {
   const method = (options.method || 'GET').toUpperCase();

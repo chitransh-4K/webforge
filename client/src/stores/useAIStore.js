@@ -4,7 +4,7 @@ import { useFileStore } from './useFileStore.js';
 import { useEditorStore } from './useEditorStore.js';
 import { useUIStore } from './useUIStore.js';
 import { findNodeByPath, buildNodePath } from '../utils/fileTree.js';
-import { apiClient } from '../api/client.js';
+import { apiClient, API_BASE } from '../api/client.js';
 
 export const useAIStore = create((set, get) => ({
   messages: [],
@@ -239,7 +239,7 @@ export const useAIStore = create((set, get) => ({
       }));
 
     try {
-      const response = await fetch('/api/ai/chat', {
+      const response = await fetch(`${API_BASE}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
