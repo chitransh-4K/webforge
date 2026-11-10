@@ -122,6 +122,11 @@ export function FileTreeNode({
             toggleFolder(node.id);
           } else {
             openTab(node.id);
+            // On mobile, switch to editor view and close drawer
+            if (window.innerWidth < 768) {
+              useUIStore.getState().setMobileView('editor');
+              useUIStore.getState().toggleExplorer();
+            }
           }
         }}
         onContextMenu={(e) => {

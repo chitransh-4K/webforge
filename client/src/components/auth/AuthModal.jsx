@@ -17,7 +17,7 @@ export function AuthModal() {
   if (user && guestNeedsImport) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-        <div className="w-full max-w-md bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl p-6 space-y-4">
+        <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl p-6 space-y-4">
           <div className="flex items-center gap-3 text-sky-400">
             <HardDriveDownload className="w-6 h-6" />
             <h3 className="text-lg font-semibold text-white">Import Guest Project?</h3>
@@ -48,7 +48,7 @@ export function AuthModal() {
   if (user) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-        <div className="w-full max-w-sm bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl overflow-hidden">
+        <div className="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-vscode-dark-border bg-[#1f1f1f]">
             <div className="flex items-center gap-2 text-white font-medium">
               <UserCheck className="w-4 h-4 text-emerald-400" />
@@ -115,7 +115,7 @@ export function AuthModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-sm bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-vscode-dark-border bg-[#1f1f1f]">
           <div className="flex items-center gap-2 text-white font-semibold">

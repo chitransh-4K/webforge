@@ -33,7 +33,7 @@ export default function App() {
       <div className="flex h-screen w-screen items-center justify-center bg-[#1e1e1e] text-white">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-[#007acc] border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-mono text-gray-400">Loading CodeCanvas...</span>
+          <span className="text-xs font-mono text-gray-400">Loading WebForge...</span>
         </div>
       </div>
     );

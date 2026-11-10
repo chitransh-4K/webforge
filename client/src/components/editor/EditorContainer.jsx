@@ -6,9 +6,11 @@ import { useUIStore } from '../../stores/useUIStore.js';
 import { getLanguageForFile } from '../../utils/fileTree.js';
 import { configureMonaco } from '../../utils/monacoConfig.js';
 import { formatCode } from '../../utils/prettierFormatter.js';
+import { useResponsive } from '../../hooks/useResponsive.js';
 import { Code2, Command, Sparkles } from 'lucide-react';
 
 export function EditorContainer() {
+  const { isMobile } = useResponsive();
   const {
     activeTabId,
     getBuffer,
@@ -48,7 +50,7 @@ export function EditorContainer() {
 
     // Add Format Document action (Shift + Alt + F)
     editor.addAction({
-      id: 'codecanvas-format',
+      id: 'webforge-format',
       label: 'Format Document (Prettier)',
       keybindings: [
         monacoInstance.KeyMod.Shift | monacoInstance.KeyMod.Alt | monacoInstance.KeyCode.KeyF,
@@ -73,7 +75,7 @@ export function EditorContainer() {
 
     // Add Save action (Ctrl+S / Cmd+S)
     editor.addAction({
-      id: 'codecanvas-save',
+      id: 'webforge-save',
       label: 'Save File',
       keybindings: [
         monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS,
@@ -110,7 +112,7 @@ export function EditorContainer() {
             <Code2 className="w-8 h-8 text-[#007acc]" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-300 dark:text-gray-300 light:text-gray-700">CodeCanvas Editor</h2>
+            <h2 className="text-lg font-semibold text-gray-300 dark:text-gray-300 light:text-gray-700">WebForge Editor</h2>
             <p className="text-xs text-gray-500 mt-1">Select a file from the explorer on the left or create a new file to start coding.</p>
           </div>
           <div className="w-full bg-white/5 rounded-lg p-3 text-xs font-mono space-y-1.5 border border-vscode-dark-border/50 text-left">
@@ -148,8 +150,9 @@ export function EditorContainer() {
         }}
         onMount={handleEditorDidMount}
         options={{
-          minimap: { enabled: true, maxColumn: 80 },
-          fontSize: 13,
+          minimap: { enabled: !isMobile, maxColumn: 80 },
+          fontSize: isMobile ? 12 : 13,
+          lineNumbersMinChars: isMobile ? 2 : 3,
           fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, 'Courier New', monospace",
           fontLigatures: true,
           tabSize: 2,

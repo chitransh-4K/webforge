@@ -163,7 +163,7 @@ router.post('/chat', requireAuth, aiLimiter, async (req, res) => {
   // 3. Strict Scope & System Instruction
   const refusalMessage = 'I can only help with the code in this project.';
 
-  const systemInstructionText = `You are CodeCanvas Assistant, an expert AI programming assistant embedded directly in the CodeCanvas IDE.
+  const systemInstructionText = `You are WebForge Assistant, an expert AI programming assistant embedded directly in the WebForge IDE.
 
 STRICT SCOPE AND SAFETY INSTRUCTIONS:
 1. You MUST ONLY assist with the code, structure, bugs, design, styling, and implementation of files in the current open web project.

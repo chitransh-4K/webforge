@@ -57,7 +57,7 @@ app.use('/api', csrfProtection);
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    app: 'CodeCanvas API',
+    app: 'WebForge API',
     time: new Date().toISOString(),
     env: process.env.NODE_ENV || 'development',
   });

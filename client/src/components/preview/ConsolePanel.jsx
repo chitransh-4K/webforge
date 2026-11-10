@@ -63,7 +63,7 @@ export function ConsolePanel() {
   return (
     <div className="flex flex-col h-full w-full bg-[#181818] text-gray-300 select-none font-mono text-xs">
       {/* Console Header */}
-      <div className="flex items-center justify-between px-3 h-8 border-b border-vscode-dark-border bg-[#1f1f1f] text-[11px]">
+      <div className="flex items-center justify-between px-3 h-8 border-b border-vscode-dark-border bg-[#1f1f1f] text-[11px] overflow-x-auto shrink-0">
         {/* Left: Title & Level Filter Pills */}
         <div className="flex items-center space-x-2">
           <div className="flex items-center gap-1.5 text-gray-200 font-semibold mr-2">

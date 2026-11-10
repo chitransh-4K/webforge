@@ -83,7 +83,7 @@ export function AIChatPanel() {
           <div>
             <h3 className="text-sm font-semibold text-white">AI Assistant Locked</h3>
             <p className="text-xs text-gray-400 mt-2 leading-relaxed max-w-xs">
-              CodeCanvas AI can review, explain, and propose edits to your project code. Sign in or create a free account to unlock AI capabilities.
+              WebForge AI can review, explain, and propose edits to your project code. Sign in or create a free account to unlock AI capabilities.
             </p>
           </div>
           <button
@@ -213,7 +213,7 @@ export function AIChatPanel() {
         {isStreaming && (
           <div className="flex items-center gap-2 text-sky-400 text-xs font-mono py-1">
             <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-            <span>Mistral is thinking...</span>
+            <span>Gemini is thinking...</span>
           </div>
         )}
       </div>
@@ -227,6 +227,7 @@ export function AIChatPanel() {
             onChange={(e) => setInputPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask about this project... (Enter to send, Shift+Enter for newline)"
+            style={{ fontSize: '16px' }}
             className="flex-1 bg-transparent text-xs text-white outline-none resize-none placeholder-gray-500 font-sans leading-relaxed"
           />
           <button

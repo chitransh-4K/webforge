@@ -2,6 +2,7 @@ import React from 'react';
 import { useEditorStore } from '../../stores/useEditorStore.js';
 import { useFileStore } from '../../stores/useFileStore.js';
 import { useUIStore } from '../../stores/useUIStore.js';
+import { useResponsive } from '../../hooks/useResponsive.js';
 import { getLanguageForFile } from '../../utils/fileTree.js';
 import { formatCode } from '../../utils/prettierFormatter.js';
 import {
@@ -27,7 +28,11 @@ export function StatusBar() {
     toggleChat,
     isConsoleOpen,
     toggleConsole,
+    mobileView,
+    setMobileView,
   } = useUIStore();
+
+  const { isMobile } = useResponsive();
 
   const activeNode = activeTabId ? getNode(activeTabId) : null;
   const language = activeNode ? getLanguageForFile(activeNode.name) : 'Plain Text';
@@ -46,21 +51,40 @@ export function StatusBar() {
     }
   };
 
+  const handlePreviewClick = () => {
+    if (isMobile) {
+      setMobileView(mobileView === 'preview' ? 'editor' : 'preview');
+    } else {
+      togglePreview();
+    }
+  };
+
+  const handleChatClick = () => {
+    if (isMobile) {
+      setMobileView(mobileView === 'chat' ? 'editor' : 'chat');
+    } else {
+      toggleChat();
+    }
+  };
+
+  const isPreviewActive = isMobile ? mobileView === 'preview' : isPreviewOpen;
+  const isChatActive = isMobile ? mobileView === 'chat' : isChatOpen;
+
   return (
-    <footer className="h-6 w-full bg-[#007acc] text-white flex items-center justify-between px-3 text-[11px] font-mono select-none z-20 shrink-0">
+    <footer className="h-6 w-full bg-[#007acc] text-white flex items-center justify-between px-2 sm:px-3 text-[11px] font-mono select-none z-20 shrink-0 overflow-hidden">
       {/* Left side: Project and save status */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 sm:space-x-3 overflow-hidden">
         {/* Project info */}
-        <div className="flex items-center gap-1.5 opacity-90 hover:opacity-100">
+        <div className="flex items-center gap-1 opacity-90 hover:opacity-100 truncate max-w-[130px] sm:max-w-none">
           {project.isGuest ? (
-            <span title="Guest mode - saved in browser IndexedDB" className="flex items-center gap-1">
-              <HardDrive className="w-3 h-3" />
-              <span>{project.name} (Guest)</span>
+            <span title="Guest mode - saved in browser IndexedDB" className="flex items-center gap-1 truncate">
+              <HardDrive className="w-3 h-3 shrink-0" />
+              <span className="truncate">{project.name}</span>
             </span>
           ) : (
-            <span title="Cloud project synced with MongoDB" className="flex items-center gap-1">
-              <Cloud className="w-3 h-3 text-sky-200" />
-              <span>{project.name}</span>
+            <span title="Cloud project synced with MongoDB" className="flex items-center gap-1 truncate">
+              <Cloud className="w-3 h-3 text-sky-200 shrink-0" />
+              <span className="truncate">{project.name}</span>
             </span>
           )}
         </div>
@@ -70,13 +94,14 @@ export function StatusBar() {
           <button
             onClick={saveActiveBuffer}
             title="Unsaved changes - click to save (Ctrl+S)"
-            className="flex items-center gap-1 bg-amber-500/80 hover:bg-amber-500 px-1.5 py-0.5 rounded text-white font-semibold transition"
+            className="flex items-center gap-1 bg-amber-500/80 hover:bg-amber-500 px-1.5 py-0.5 rounded text-white font-semibold transition shrink-0"
           >
             <Save className="w-3 h-3" />
-            <span>Unsaved (Save)</span>
+            <span className="hidden sm:inline">Unsaved (Save)</span>
+            <span className="sm:hidden">Save</span>
           </button>
         ) : (
-          <span className="flex items-center gap-1 opacity-75">
+          <span className="hidden sm:flex items-center gap-1 opacity-75 shrink-0">
             <CheckCheck className="w-3 h-3 text-emerald-300" />
             <span>Saved</span>
           </span>
@@ -84,28 +109,28 @@ export function StatusBar() {
 
         {/* Live status message toast */}
         {statusMessage && (
-          <span className="bg-black/30 px-2 py-0.5 rounded text-white animate-fade-in truncate max-w-xs sm:max-w-md">
+          <span className="bg-black/30 px-1.5 sm:px-2 py-0.5 rounded text-white animate-fade-in truncate max-w-[100px] sm:max-w-md">
             {statusMessage}
           </span>
         )}
       </div>
 
       {/* Right side: Editor stats and panel shortcuts */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
         {activeNode && (
           <>
             {/* Ln / Col */}
-            <span title="Cursor position">
+            <span title="Cursor position" className="hidden sm:inline">
               Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
             </span>
 
             {/* Spaces */}
-            <span title="Tab size" className="hidden sm:inline">
+            <span title="Tab size" className="hidden md:inline">
               Spaces: 2
             </span>
 
             {/* Encoding */}
-            <span title="File encoding" className="hidden sm:inline">
+            <span title="File encoding" className="hidden md:inline">
               UTF-8
             </span>
 
@@ -116,18 +141,18 @@ export function StatusBar() {
               className="flex items-center gap-1 hover:underline hover:text-sky-200"
             >
               <Sparkles className="w-3 h-3" />
-              <span>Prettier</span>
+              <span className="hidden sm:inline">Prettier</span>
             </button>
 
             {/* Language */}
-            <span className="font-semibold capitalize">
+            <span className="font-semibold capitalize truncate max-w-[60px] sm:max-w-none">
               {language}
             </span>
           </>
         )}
 
         {/* Quick layout icon toggles */}
-        <div className="flex items-center gap-1 border-l border-white/20 pl-2">
+        <div className="flex items-center gap-1 border-l border-white/20 pl-1.5 sm:pl-2">
           <button
             onClick={toggleConsole}
             title="Toggle Console"
@@ -136,16 +161,16 @@ export function StatusBar() {
             <Terminal className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={togglePreview}
+            onClick={handlePreviewClick}
             title="Toggle Live Preview"
-            className={`p-0.5 rounded hover:bg-white/20 ${isPreviewOpen ? 'text-white' : 'opacity-60'}`}
+            className={`p-0.5 rounded hover:bg-white/20 ${isPreviewActive ? 'text-white' : 'opacity-60'}`}
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={toggleChat}
+            onClick={handleChatClick}
             title="Toggle AI Chat"
-            className={`p-0.5 rounded hover:bg-white/20 ${isChatOpen ? 'text-white' : 'opacity-60'}`}
+            className={`p-0.5 rounded hover:bg-white/20 ${isChatActive ? 'text-white' : 'opacity-60'}`}
           >
             <Bot className="w-3.5 h-3.5" />
           </button>

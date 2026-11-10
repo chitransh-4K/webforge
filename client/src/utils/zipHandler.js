@@ -40,7 +40,7 @@ export async function exportProjectToZip(project) {
 
   // Generate ZIP blob
   const content = await zip.generateAsync({ type: 'blob' });
-  const filename = `${(name || 'codecanvas-project').replace(/[^a-zA-Z0-9_-]/g, '_')}.zip`;
+  const filename = `${(name || 'webforge-project').replace(/[^a-zA-Z0-9_-]/g, '_')}.zip`;
 
   // Trigger download
   const url = URL.createObjectURL(content);

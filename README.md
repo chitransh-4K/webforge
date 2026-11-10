@@ -1,4 +1,4 @@
-# CodeCanvas
+# WebForge
 
 A modern, web-based, VS Code-style IDE for HTML, CSS, and JavaScript with live preview and an integrated AI coding assistant powered by **Gemini**.
 

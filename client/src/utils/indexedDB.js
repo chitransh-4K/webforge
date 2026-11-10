@@ -1,7 +1,7 @@
 import { get, set, del } from 'idb-keyval';
 
-const GUEST_PROJECT_KEY = 'codecanvas_guest_project';
-const GUEST_CHAT_KEY = 'codecanvas_guest_chat';
+const GUEST_PROJECT_KEY = 'webforge_guest_project';
+const GUEST_CHAT_KEY = 'webforge_guest_chat';
 
 export async function saveGuestProject(project) {
   try {

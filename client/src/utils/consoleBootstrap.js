@@ -1,7 +1,7 @@
 /**
  * Script injected into the preview iframe to intercept console output,
  * runtime errors, and unhandled promise rejections, forwarding them
- * to the parent CodeCanvas window via postMessage.
+ * to the parent WebForge window via postMessage.
  */
 export const CONSOLE_BOOTSTRAP_SCRIPT = `
 (function() {
@@ -46,7 +46,7 @@ export const CONSOLE_BOOTSTRAP_SCRIPT = `
     try {
       const serialized = args.map(serializeArg);
       window.parent.postMessage({
-        type: 'CODECANVAS_CONSOLE',
+        type: 'WEBFORGE_CONSOLE',
         payload: {
           id: Math.random().toString(36).substring(2) + Date.now(),
           level: level,

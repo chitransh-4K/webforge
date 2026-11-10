@@ -17,13 +17,13 @@ export const STARTER_INDEX_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CodeCanvas App</title>
+  <title>WebForge App</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="card">
     <div class="badge">Live Web App</div>
-    <h1>Welcome to <span>CodeCanvas</span></h1>
+    <h1>Welcome to <span>WebForge</span></h1>
     <p>A web-based VS Code-style IDE for modern web development.</p>
     <div class="actions">
       <button id="counterBtn" class="btn">Clicked 0 times</button>
@@ -144,7 +144,7 @@ p {
 }
 `;
 
-export const STARTER_SCRIPT_JS = `console.log('CodeCanvas script initialized!');
+export const STARTER_SCRIPT_JS = `console.log('WebForge script initialized!');
 
 let count = 0;
 const counterBtn = document.getElementById('counterBtn');
@@ -196,7 +196,7 @@ export function createDefaultNodes() {
   ];
 }
 
-export function createDefaultProject(name = 'CodeCanvas Demo') {
+export function createDefaultProject(name = 'WebForge Demo') {
   return {
     _id: 'guest-project-1',
     name,

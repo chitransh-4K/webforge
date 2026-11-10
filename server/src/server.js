@@ -8,7 +8,7 @@ async function bootstrap() {
   try {
     await connectDB();
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[Server] CodeCanvas server listening on http://127.0.0.1:${PORT}`);
+      console.log(`[Server] WebForge server listening on http://127.0.0.1:${PORT}`);
     });
   } catch (err) {
     console.error('[Server] Fatal startup error:', err);

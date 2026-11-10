@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 function getInitialTheme() {
-  const saved = localStorage.getItem('codecanvas_theme');
+  const saved = localStorage.getItem('webforge_theme');
   if (saved === 'dark' || saved === 'light') return saved;
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
     return 'light';
@@ -16,10 +16,12 @@ function getStoredBool(key, defaultValue) {
 
 export const useUIStore = create((set, get) => ({
   theme: getInitialTheme(),
-  isExplorerOpen: getStoredBool('codecanvas_panel_explorer', true),
-  isPreviewOpen: getStoredBool('codecanvas_panel_preview', true),
-  isChatOpen: getStoredBool('codecanvas_panel_chat', false),
-  isConsoleOpen: getStoredBool('codecanvas_panel_console', true),
+  isExplorerOpen: getStoredBool('webforge_panel_explorer', true),
+  isPreviewOpen: getStoredBool('webforge_panel_preview', true),
+  isChatOpen: getStoredBool('webforge_panel_chat', false),
+  isConsoleOpen: getStoredBool('webforge_panel_console', true),
+  mobileView: 'editor', // 'editor' | 'preview' | 'chat'
+  setMobileView: (view) => set({ mobileView: view }),
   
   // Modals & popups
   activeModal: null, // 'auth' | 'projectSwitcher' | 'shortcuts' | 'diff' | 'confirm' | 'importGuest'
@@ -37,7 +39,7 @@ export const useUIStore = create((set, get) => ({
   },
 
   setTheme: (theme) => {
-    localStorage.setItem('codecanvas_theme', theme);
+    localStorage.setItem('webforge_theme', theme);
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
@@ -56,28 +58,28 @@ export const useUIStore = create((set, get) => ({
   toggleExplorer: () =>
     set((state) => {
       const next = !state.isExplorerOpen;
-      localStorage.setItem('codecanvas_panel_explorer', String(next));
+      localStorage.setItem('webforge_panel_explorer', String(next));
       return { isExplorerOpen: next };
     }),
 
   togglePreview: () =>
     set((state) => {
       const next = !state.isPreviewOpen;
-      localStorage.setItem('codecanvas_panel_preview', String(next));
+      localStorage.setItem('webforge_panel_preview', String(next));
       return { isPreviewOpen: next };
     }),
 
   toggleChat: () =>
     set((state) => {
       const next = !state.isChatOpen;
-      localStorage.setItem('codecanvas_panel_chat', String(next));
+      localStorage.setItem('webforge_panel_chat', String(next));
       return { isChatOpen: next };
     }),
 
   toggleConsole: () =>
     set((state) => {
       const next = !state.isConsoleOpen;
-      localStorage.setItem('codecanvas_panel_console', String(next));
+      localStorage.setItem('webforge_panel_console', String(next));
       return { isConsoleOpen: next };
     }),
 

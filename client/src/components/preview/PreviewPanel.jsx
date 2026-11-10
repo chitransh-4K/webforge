@@ -70,7 +70,7 @@ export function PreviewPanel() {
         return;
       }
 
-      if (event.data && event.data.type === 'CODECANVAS_CONSOLE') {
+      if (event.data && event.data.type === 'WEBFORGE_CONSOLE') {
         addLog(event.data.payload);
       }
     };
@@ -150,7 +150,7 @@ export function PreviewPanel() {
       <div className="flex-1 w-full h-full relative bg-white">
         <iframe
           ref={iframeRef}
-          title="CodeCanvas Live Preview"
+          title="WebForge Live Preview"
           srcDoc={previewSrcDoc}
           sandbox="allow-scripts"
           className="w-full h-full border-0 bg-white"

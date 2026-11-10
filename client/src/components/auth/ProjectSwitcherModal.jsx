@@ -31,14 +31,14 @@ export function ProjectSwitcherModal() {
   if (!user) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-        <div className="w-full max-w-md bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl p-6 text-center space-y-4">
+        <div className="w-full max-w-md bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl p-6 text-center space-y-4 max-h-[90vh] overflow-y-auto">
           <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto text-amber-400">
             <Lock className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white">Guest Mode</h3>
             <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              You are currently using CodeCanvas as a Guest. Your project is automatically saved in your browser's IndexedDB.
+              You are currently using WebForge as a Guest. Your project is automatically saved in your browser's IndexedDB.
               Sign in to create multiple projects, sync them across devices, and unlock AI assistant features!
             </p>
           </div>
@@ -159,7 +159,7 @@ export function ProjectSwitcherModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="w-full max-w-lg bg-[#252526] border border-vscode-dark-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-vscode-dark-border bg-[#1f1f1f]">
           <div className="flex items-center gap-2 text-white font-semibold">
