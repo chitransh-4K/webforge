@@ -98,17 +98,21 @@ export const useAIStore = create((set, get) => ({
         let parentId = null;
 
         if (segments.length > 0) {
-          const folderPath = segments.join('/');
-          let folderNode = findNodeByPath(folderPath, fileStore.project.nodes);
-          if (!folderNode) {
-            // Create folder
-            folderNode = fileStore.addNode({
-              parentId: null,
-              name: segments[0],
-              type: 'folder',
-            });
+          let currentParentId = null;
+          let cumulativePath = '';
+          for (const seg of segments) {
+            cumulativePath = cumulativePath ? `${cumulativePath}/${seg}` : seg;
+            let folderNode = findNodeByPath(cumulativePath, fileStore.project.nodes);
+            if (!folderNode) {
+              folderNode = fileStore.addNode({
+                parentId: currentParentId,
+                name: seg,
+                type: 'folder',
+              });
+            }
+            currentParentId = folderNode.id;
           }
-          parentId = folderNode.id;
+          parentId = currentParentId;
         }
 
         const newNode = fileStore.addNode({

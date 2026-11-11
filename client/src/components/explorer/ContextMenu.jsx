@@ -139,14 +139,14 @@ export function ContextMenu({
             className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-[#094771] hover:text-white transition-colors"
           >
             <Download className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Export ZIP</span>
+            <span>Download ZIP</span>
           </button>
           <button
             onClick={() => { onImportZip(); onClose(); }}
             className="flex items-center gap-2 w-full px-3 py-1.5 hover:bg-[#094771] hover:text-white transition-colors"
           >
             <Upload className="w-3.5 h-3.5 text-purple-400" />
-            <span>Import ZIP...</span>
+            <span>Upload ZIP...</span>
           </button>
         </>
       )}

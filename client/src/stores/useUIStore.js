@@ -3,10 +3,7 @@ import { create } from 'zustand';
 function getInitialTheme() {
   const saved = localStorage.getItem('webforge_theme');
   if (saved === 'dark' || saved === 'light') return saved;
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-    return 'light';
-  }
-  return 'dark';
+  return 'dark'; // Always default to dark mode
 }
 
 function getStoredBool(key, defaultValue) {
@@ -66,15 +63,37 @@ export const useUIStore = create((set, get) => ({
     set((state) => {
       const next = !state.isPreviewOpen;
       localStorage.setItem('webforge_panel_preview', String(next));
-      return { isPreviewOpen: next };
+      if (next) {
+        // Mutual exclusion: automatically close AI chat when preview opens
+        localStorage.setItem('webforge_panel_chat', 'false');
+        return { isPreviewOpen: true, isChatOpen: false };
+      }
+      return { isPreviewOpen: false };
     }),
 
   toggleChat: () =>
     set((state) => {
       const next = !state.isChatOpen;
       localStorage.setItem('webforge_panel_chat', String(next));
-      return { isChatOpen: next };
+      if (next) {
+        // Mutual exclusion: automatically close preview when AI chat opens
+        localStorage.setItem('webforge_panel_preview', 'false');
+        return { isChatOpen: true, isPreviewOpen: false };
+      }
+      return { isChatOpen: false };
     }),
+
+  openPreview: () => {
+    localStorage.setItem('webforge_panel_preview', 'true');
+    localStorage.setItem('webforge_panel_chat', 'false');
+    set({ isPreviewOpen: true, isChatOpen: false });
+  },
+
+  openChat: () => {
+    localStorage.setItem('webforge_panel_chat', 'true');
+    localStorage.setItem('webforge_panel_preview', 'false');
+    set({ isChatOpen: true, isPreviewOpen: false });
+  },
 
   toggleConsole: () =>
     set((state) => {

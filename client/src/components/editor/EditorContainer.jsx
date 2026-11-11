@@ -85,6 +85,54 @@ export function EditorContainer() {
       },
     });
 
+    // Add Toggle Explorer action (Ctrl+B / Cmd+B)
+    editor.addAction({
+      id: 'webforge-toggle-explorer',
+      label: 'Toggle File Explorer',
+      keybindings: [
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyB,
+      ],
+      run: () => {
+        useUIStore.getState().toggleExplorer();
+      },
+    });
+
+    // Add Toggle Preview action (Ctrl+P / Cmd+P)
+    editor.addAction({
+      id: 'webforge-toggle-preview',
+      label: 'Toggle Live Preview',
+      keybindings: [
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyP,
+      ],
+      run: () => {
+        useUIStore.getState().togglePreview();
+      },
+    });
+
+    // Add Toggle Console action (Ctrl+J / Cmd+J)
+    editor.addAction({
+      id: 'webforge-toggle-console',
+      label: 'Toggle Console Panel',
+      keybindings: [
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyJ,
+      ],
+      run: () => {
+        useUIStore.getState().toggleConsole();
+      },
+    });
+
+    // Add Toggle AI Chat action (Ctrl+Shift+A / Cmd+Shift+A)
+    editor.addAction({
+      id: 'webforge-toggle-chat',
+      label: 'Toggle AI Assistant',
+      keybindings: [
+        monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyMod.Shift | monacoInstance.KeyCode.KeyA,
+      ],
+      run: () => {
+        useUIStore.getState().toggleChat();
+      },
+    });
+
     // Handle initial jump if present
     const jump = useEditorStore.getState().pendingJump;
     if (jump && jump.fileId === activeTabId) {

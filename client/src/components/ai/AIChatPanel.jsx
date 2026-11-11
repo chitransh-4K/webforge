@@ -106,7 +106,7 @@ export function AIChatPanel() {
           <Sparkles className="w-3.5 h-3.5 text-sky-400" />
           <span className="font-semibold uppercase tracking-wider">AI Assistant</span>
           <span className="text-[10px] bg-sky-500/20 text-sky-300 px-1.5 py-0.2 rounded font-sans">
-            Gemini
+            OpenRouter
           </span>
         </div>
 
@@ -213,7 +213,7 @@ export function AIChatPanel() {
         {isStreaming && (
           <div className="flex items-center gap-2 text-sky-400 text-xs font-mono py-1">
             <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-            <span>Gemini is thinking...</span>
+            <span>WebForge AI is thinking...</span>
           </div>
         )}
       </div>

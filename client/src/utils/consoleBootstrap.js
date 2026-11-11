@@ -90,5 +90,17 @@ export const CONSOLE_BOOTSTRAP_SCRIPT = `
     const loc = parseErrorLocation(stack);
     sendToParent('error', ['Unhandled Promise Rejection: ' + msg], stack, null, loc ? loc.line : null, loc ? loc.column : null);
   });
+
+  // Listen for interactive terminal evaluation commands from WebForge
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'WEBFORGE_EVAL') {
+      try {
+        var evalResult = window.eval(e.data.code);
+        sendToParent('log', [evalResult]);
+      } catch (err) {
+        sendToParent('error', [err.message || String(err)], err.stack);
+      }
+    }
+  });
 })();
 `;

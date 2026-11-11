@@ -92,7 +92,7 @@ export function ActivityBar() {
         {/* AI Assistant */}
         <button
           onClick={handleChatClick}
-          title="AI Assistant (Gemini)"
+          title="AI Assistant"
           className={`relative p-2 sm:p-2.5 rounded hover:text-white transition-colors ${
             isChatActive ? 'text-white border-l-2 border-[#007acc]' : 'text-gray-400'
           }`}

@@ -113,11 +113,11 @@ export function FileExplorer() {
 
   const handleExportZip = async () => {
     try {
-      setStatusMessage('Exporting project ZIP...');
+      setStatusMessage('Downloading project ZIP...');
       await exportProjectToZip(project);
-      setStatusMessage('Project ZIP exported successfully.');
+      setStatusMessage('Project ZIP downloaded successfully.');
     } catch (err) {
-      setStatusMessage(`Export ZIP error: ${err.message}`);
+      setStatusMessage(`Download ZIP error: ${err.message}`);
     }
   };
 
@@ -129,7 +129,7 @@ export function FileExplorer() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      setStatusMessage('Importing ZIP project...');
+      setStatusMessage('Uploading ZIP project...');
       const importedNodes = await importZipToProject(file);
       const updatedProject = {
         ...project,
@@ -142,10 +142,10 @@ export function FileExplorer() {
       if (indexNode) {
         openTab(indexNode.id);
       }
-      setStatusMessage(`Imported ${importedNodes.length} files/folders from ZIP.`);
+      setStatusMessage(`Uploaded ${importedNodes.length} files/folders from ZIP.`);
     } catch (err) {
-      alert(`Import failed: ${err.message}`);
-      setStatusMessage(`ZIP import failed: ${err.message}`);
+      alert(`Upload failed: ${err.message}`);
+      setStatusMessage(`ZIP upload failed: ${err.message}`);
     }
     e.target.value = '';
   };
@@ -200,14 +200,14 @@ export function FileExplorer() {
           </button>
           <button
             onClick={handleExportZip}
-            title="Export ZIP"
+            title="Download ZIP"
             className="p-1 rounded hover:text-white dark:hover:text-white light:hover:text-black hover:bg-white/10"
           >
             <Download className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleImportZipClick}
-            title="Import ZIP"
+            title="Upload ZIP"
             className="p-1 rounded hover:text-white dark:hover:text-white light:hover:text-black hover:bg-white/10"
           >
             <Upload className="w-3.5 h-3.5" />
@@ -249,6 +249,11 @@ export function FileExplorer() {
             toggleFolder={toggleFolder}
             renamingNodeId={renamingNodeId}
             setRenamingNodeId={setRenamingNodeId}
+            isCreating={isCreating}
+            createName={createName}
+            setCreateName={setCreateName}
+            handleCreateSubmit={handleCreateSubmit}
+            setIsCreating={setIsCreating}
             onContextMenu={(e, target) => {
               setContextMenu({ x: e.clientX, y: e.clientY, targetNode: target });
             }}

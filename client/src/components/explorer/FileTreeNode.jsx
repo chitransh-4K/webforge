@@ -3,7 +3,7 @@ import { useEditorStore } from '../../stores/useEditorStore.js';
 import { useFileStore } from '../../stores/useFileStore.js';
 import { useUIStore } from '../../stores/useUIStore.js';
 import { getFileIcon } from '../editor/EditorTabs.jsx';
-import { ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FilePlus, FolderPlus } from 'lucide-react';
 
 export function FileTreeNode({
   node,
@@ -12,6 +12,11 @@ export function FileTreeNode({
   toggleFolder,
   renamingNodeId,
   setRenamingNodeId,
+  isCreating,
+  createName,
+  setCreateName,
+  handleCreateSubmit,
+  setIsCreating,
   onContextMenu,
 }) {
   const { activeTabId, openTab } = useEditorStore();
@@ -182,9 +187,34 @@ export function FileTreeNode({
         )}
       </div>
 
-      {/* Render children recursively if folder is open */}
-      {isFolder && isOpen && children.length > 0 && (
+      {/* Render children or inline create input if folder is open */}
+      {isFolder && isOpen && (
         <div>
+          {/* Inline input for creating inside this folder */}
+          {isCreating && isCreating.parentId === node.id && (
+            <div
+              style={{ paddingLeft: `${(depth + 1) * 14 + 10}px` }}
+              className="flex items-center h-6.5 text-xs font-mono pr-2"
+            >
+              <span className="mr-1.5 text-sky-400">
+                {isCreating.type === 'file' ? <FilePlus className="w-3.5 h-3.5" /> : <FolderPlus className="w-3.5 h-3.5" />}
+              </span>
+              <input
+                autoFocus
+                type="text"
+                placeholder={`name.${isCreating.type === 'file' ? 'js' : ''}`}
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                onBlur={handleCreateSubmit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateSubmit();
+                  if (e.key === 'Escape') setIsCreating(null);
+                }}
+                className="flex-1 bg-[#3c3c3c] text-white px-1.5 py-0.5 rounded outline-none border border-[#007acc] text-xs font-mono"
+              />
+            </div>
+          )}
+
           {children.map((child) => (
             <FileTreeNode
               key={child.id}
@@ -194,6 +224,11 @@ export function FileTreeNode({
               toggleFolder={toggleFolder}
               renamingNodeId={renamingNodeId}
               setRenamingNodeId={setRenamingNodeId}
+              isCreating={isCreating}
+              createName={createName}
+              setCreateName={setCreateName}
+              handleCreateSubmit={handleCreateSubmit}
+              setIsCreating={setIsCreating}
               onContextMenu={onContextMenu}
             />
           ))}

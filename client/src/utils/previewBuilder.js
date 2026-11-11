@@ -1,5 +1,5 @@
 import { CONSOLE_BOOTSTRAP_SCRIPT } from './consoleBootstrap.js';
-import { findNodeByPath } from './fileTree.js';
+import { findNodeByPath, buildNodePath } from './fileTree.js';
 import { useConsoleStore } from '../stores/useConsoleStore.js';
 
 let previousBlobUrls = [];
@@ -72,25 +72,30 @@ export function buildPreviewHTML(nodes, buffers = {}, options = {}) {
   const cssFiles = fileNodes.filter((n) => n.name.toLowerCase().endsWith('.css'));
 
   const importMap = { imports: {} };
-  const jsBlobMap = {}; // relative path -> blobUrl
-  const svgBlobMap = {}; // relative path -> blobUrl
+  const jsBlobMap = {}; // nodeId -> blobUrl
+  const svgBlobMap = {}; // nodeId -> blobUrl
 
   // Create JS Blobs and populate Import Map
   for (const js of jsFiles) {
     const code = getEffectiveContent(js);
+    const relPath = buildNodePath(js.id, nodes).replace(/^\/+/, '');
     if (!inlineAll) {
       const blob = new Blob([code], { type: 'application/javascript;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       currentBlobs.push(url);
 
-      // Map filename and relative variants
-      jsBlobMap[js.name] = url;
+      // Map by id and by all path variants
+      jsBlobMap[js.id] = url;
       importMap.imports[js.name] = url;
       importMap.imports[`./${js.name}`] = url;
       importMap.imports[`/${js.name}`] = url;
+      if (relPath && relPath !== js.name) {
+        importMap.imports[relPath] = url;
+        importMap.imports[`./${relPath}`] = url;
+        importMap.imports[`/${relPath}`] = url;
+      }
     } else {
-      // For inline mode, just store content
-      jsBlobMap[js.name] = null;
+      jsBlobMap[js.id] = null;
     }
   }
 
@@ -101,9 +106,9 @@ export function buildPreviewHTML(nodes, buffers = {}, options = {}) {
       const blob = new Blob([code], { type: 'image/svg+xml;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       currentBlobs.push(url);
-      svgBlobMap[svg.name] = url;
+      svgBlobMap[svg.id] = url;
     } else {
-      svgBlobMap[svg.name] = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(code)}`;
+      svgBlobMap[svg.id] = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(code)}`;
     }
   }
 
@@ -175,7 +180,7 @@ export function buildPreviewHTML(nodes, buffers = {}, options = {}) {
         script.removeAttribute('src');
         script.textContent = jsContent;
       } else {
-        const blobUrl = jsBlobMap[targetJsNode.name];
+        const blobUrl = jsBlobMap[targetJsNode.id];
         if (blobUrl) {
           script.setAttribute('src', blobUrl);
         }
@@ -197,7 +202,7 @@ export function buildPreviewHTML(nodes, buffers = {}, options = {}) {
     const resolved = resolvePath(src);
     const targetSvg = findNodeByPath(resolved, nodes);
     if (targetSvg && targetSvg.type === 'file') {
-      const blobUrl = svgBlobMap[targetSvg.name];
+      const blobUrl = svgBlobMap[targetSvg.id];
       if (blobUrl) {
         img.setAttribute('src', blobUrl);
       }

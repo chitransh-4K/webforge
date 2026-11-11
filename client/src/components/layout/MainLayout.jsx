@@ -208,7 +208,7 @@ export function MainLayout() {
                 </PanelGroup>
               </Panel>
 
-              {/* Right Region: Live Preview and AI Chat (both open = side by side) */}
+              {/* Right Region: Live Preview OR AI Chat (mutually exclusive) */}
               {isRightRegionOpen && (
                 <>
                   <PanelResizeHandle className="w-1 bg-vscode-dark-border/40 hover:bg-[#007acc] transition-colors cursor-col-resize z-10" />
@@ -220,38 +220,8 @@ export function MainLayout() {
                     maxSize={70}
                     className="h-full overflow-hidden border-l border-vscode-dark-border"
                   >
-                    <PanelGroup direction="horizontal" autoSaveId="webforge-right-layout">
-                      {/* Live Preview Panel */}
-                      {isPreviewOpen && (
-                        <Panel
-                          id="panel-preview"
-                          order={1}
-                          defaultSize={isChatOpen ? 50 : 100}
-                          minSize={25}
-                          className="h-full overflow-hidden bg-vscode-dark-bg"
-                        >
-                          <PreviewPanel />
-                        </Panel>
-                      )}
-
-                      {/* Resize handle between Preview and Chat if both open */}
-                      {isPreviewOpen && isChatOpen && (
-                        <PanelResizeHandle className="w-1 bg-vscode-dark-border/40 hover:bg-[#007acc] transition-colors cursor-col-resize z-10" />
-                      )}
-
-                      {/* AI Chat Panel */}
-                      {isChatOpen && (
-                        <Panel
-                          id="panel-chat"
-                          order={2}
-                          defaultSize={isPreviewOpen ? 50 : 100}
-                          minSize={25}
-                          className="h-full overflow-hidden bg-[#1e1e1e]"
-                        >
-                          <AIChatPanel />
-                        </Panel>
-                      )}
-                    </PanelGroup>
+                    {isPreviewOpen && <PreviewPanel />}
+                    {isChatOpen && <AIChatPanel />}
                   </Panel>
                 </>
               )}
