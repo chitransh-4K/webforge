@@ -240,11 +240,17 @@ ${fileContentsFormatted || '(empty project)'}
 
   let fullAssistantText = '';
   const proposalsCollected = [];
+  const MAX_AGENT_TURNS = 8;
+  let clientDisconnected = false;
+
+  req.on('close', () => {
+    clientDisconnected = true;
+  });
 
   try {
     if (openRouterKey) {
-      // --- OpenRouter API (MERN stack, pure Node.js) ---
-      const modelName = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+      // --- OpenRouter Autonomous Agent Loop (MERN Stack, pure Node.js) ---
+      const modelName = process.env.OPENROUTER_MODEL || 'openrouter/auto';
       const messages = [
         { role: 'system', content: systemInstructionText },
         ...history.slice(-8).map((h) => ({
@@ -254,122 +260,179 @@ ${fileContentsFormatted || '(empty project)'}
         { role: 'user', content: prompt },
       ];
 
-      const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openRouterKey}`,
-          'HTTP-Referer': process.env.CLIENT_ORIGIN || 'https://webforge-seven-lyart.vercel.app',
-          'X-Title': 'WebForge IDE',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages,
-          tools: OPENROUTER_TOOLS,
-          tool_choice: 'auto',
-          stream: true,
-          max_tokens: 8192,
-          temperature: 0.2,
-        }),
-      });
+      let turn = 0;
+      let shouldContinue = true;
 
-      if (!orRes.ok) {
-        const errJson = await orRes.json().catch(() => ({}));
-        const msg = errJson.error?.message || `OpenRouter API returned status ${orRes.status}`;
-        sendEvent({ type: 'error', error: msg });
-        res.write('data: [DONE]\n\n');
-        return res.end();
-      }
+      while (shouldContinue && turn < MAX_AGENT_TURNS && !clientDisconnected) {
+        turn++;
 
-      const reader = orRes.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
-      const pendingToolCalls = {};
+        const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openRouterKey}`,
+            'HTTP-Referer': process.env.CLIENT_ORIGIN || 'https://webforge-seven-lyart.vercel.app',
+            'X-Title': 'WebForge IDE',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages,
+            tools: OPENROUTER_TOOLS,
+            tool_choice: 'auto',
+            stream: true,
+            max_tokens: 8192,
+            temperature: 0.2,
+          }),
+        });
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+        if (!orRes.ok) {
+          const errJson = await orRes.json().catch(() => ({}));
+          const msg = errJson.error?.message || `OpenRouter API returned status ${orRes.status}`;
+          sendEvent({ type: 'error', error: msg });
+          break;
+        }
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
+        const reader = orRes.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        const pendingToolCalls = {};
+        let turnText = '';
+        let finishReason = null;
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const jsonStr = line.slice(6).trim();
-            if (!jsonStr || jsonStr === '[DONE]') continue;
+        while (!clientDisconnected) {
+          const { value, done } = await reader.read();
+          if (done) break;
 
-            try {
-              const data = JSON.parse(jsonStr);
-              const delta = data.choices?.[0]?.delta;
-              if (delta) {
-                // Text stream token
-                if (delta.content) {
-                  fullAssistantText += delta.content;
-                  sendEvent({ type: 'token', token: delta.content });
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6).trim();
+              if (!jsonStr || jsonStr === '[DONE]') continue;
+
+              try {
+                const data = JSON.parse(jsonStr);
+                const choice = data.choices?.[0];
+                const delta = choice?.delta;
+                if (choice?.finish_reason) {
+                  finishReason = choice.finish_reason;
                 }
 
-                // Tool calls stream
-                if (delta.tool_calls) {
-                  for (const tc of delta.tool_calls) {
-                    const idx = tc.index ?? 0;
-                    if (!pendingToolCalls[idx]) {
-                      pendingToolCalls[idx] = {
-                        name: tc.function?.name || '',
-                        arguments: '',
-                      };
-                    }
-                    if (tc.function?.name) {
-                      pendingToolCalls[idx].name = tc.function.name;
-                    }
-                    if (tc.function?.arguments) {
-                      pendingToolCalls[idx].arguments += tc.function.arguments;
+                if (delta) {
+                  // Text stream token
+                  if (delta.content) {
+                    turnText += delta.content;
+                    fullAssistantText += delta.content;
+                    sendEvent({ type: 'token', token: delta.content });
+                  }
+
+                  // Tool calls stream
+                  if (delta.tool_calls) {
+                    for (const tc of delta.tool_calls) {
+                      const idx = tc.index ?? 0;
+                      if (!pendingToolCalls[idx]) {
+                        pendingToolCalls[idx] = {
+                          id: tc.id || `call_${Date.now()}_${idx}`,
+                          name: tc.function?.name || '',
+                          arguments: '',
+                        };
+                      }
+                      if (tc.id) pendingToolCalls[idx].id = tc.id;
+                      if (tc.function?.name) pendingToolCalls[idx].name = tc.function.name;
+                      if (tc.function?.arguments) pendingToolCalls[idx].arguments += tc.function.arguments;
                     }
                   }
                 }
-              }
-            } catch (e) {
-              // ignore parse errors for partial chunks
-            }
-          }
-        }
-      }
-
-      // Process completed tool calls
-      for (const tc of Object.values(pendingToolCalls)) {
-        try {
-          if (!tc.arguments) continue;
-          const args = JSON.parse(tc.arguments);
-          const rawPath = args.path;
-          const cleanPath = sanitizePath(rawPath);
-
-          if (cleanPath && isValidExtension(cleanPath)) {
-            if (proposalsCollected.length < MAX_PROPOSALS) {
-              const isCreate = tc.name === 'propose_create';
-              const content = isCreate ? args.content || '' : args.newContent || '';
-              const summary = args.summary || (isCreate ? `Create ${cleanPath}` : `Update ${cleanPath}`);
-
-              if (Buffer.byteLength(content, 'utf8') <= MAX_FILE_SIZE) {
-                const proposal = {
-                  id: `prop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-                  type: isCreate ? 'create' : 'edit',
-                  path: cleanPath,
-                  content,
-                  summary,
-                };
-                proposalsCollected.push(proposal);
-                sendEvent({ type: 'proposal', proposal });
+              } catch (e) {
+                // ignore parse errors for partial chunks
               }
             }
           }
-        } catch (parseErr) {
-          console.warn('[AI] OpenRouter tool call argument parse error:', parseErr);
         }
+
+        const turnToolCallsList = Object.values(pendingToolCalls);
+        const turnProposals = [];
+
+        for (const tc of turnToolCallsList) {
+          try {
+            if (!tc.arguments) continue;
+            const args = JSON.parse(tc.arguments);
+            const rawPath = args.path;
+            const cleanPath = sanitizePath(rawPath);
+
+            if (cleanPath && isValidExtension(cleanPath)) {
+              if (proposalsCollected.length < MAX_PROPOSALS) {
+                const isCreate = tc.name === 'propose_create';
+                const content = isCreate ? args.content || '' : args.newContent || '';
+                const summary = args.summary || (isCreate ? `Create ${cleanPath}` : `Update ${cleanPath}`);
+
+                if (Buffer.byteLength(content, 'utf8') <= MAX_FILE_SIZE) {
+                  const proposal = {
+                    id: `prop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                    type: isCreate ? 'create' : 'edit',
+                    path: cleanPath,
+                    content,
+                    summary,
+                  };
+                  proposalsCollected.push(proposal);
+                  turnProposals.push({ ...proposal, callId: tc.id, toolName: tc.name });
+                  sendEvent({ type: 'proposal', proposal });
+                }
+              }
+            }
+          } catch (parseErr) {
+            console.warn('[AI] OpenRouter tool call argument parse error:', parseErr);
+          }
+        }
+
+        // Autonomous continuation decision:
+        if (finishReason === 'length') {
+          // Output token limit reached -> auto-continue seamlessly
+          messages.push({ role: 'assistant', content: turnText });
+          messages.push({
+            role: 'user',
+            content: 'Please continue directly where you left off. Do not repeat what was already written.',
+          });
+          sendEvent({ type: 'token', token: '\n\n' });
+          continue;
+        }
+
+        if (turnProposals.length > 0) {
+          // File(s) proposed -> feed result back to agent to autonomously continue creating remaining files
+          messages.push({
+            role: 'assistant',
+            content: turnText || null,
+            tool_calls: turnToolCallsList.map((tc) => ({
+              id: tc.id,
+              type: 'function',
+              function: {
+                name: tc.name,
+                arguments: tc.arguments,
+              },
+            })),
+          });
+
+          for (const tp of turnProposals) {
+            messages.push({
+              role: 'tool',
+              tool_call_id: tp.callId,
+              content: `Proposal for "${tp.path}" created successfully. If other files or modifications are needed to finish the user request completely (e.g. style, script, components), call the next tool now. If completely done, summarize what you built.`,
+            });
+          }
+
+          sendEvent({ type: 'token', token: '\n\n' });
+          continue;
+        }
+
+        // No tool calls and finished cleanly -> agent is done
+        shouldContinue = false;
       }
     } else {
-      // --- Fallback: Google Gemini API ---
+      // --- Fallback: Google Gemini API Autonomous Loop ---
       const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-      const contents = [];
+      let contents = [];
 
       for (const h of history.slice(-8)) {
         contents.push({
@@ -383,96 +446,128 @@ ${fileContentsFormatted || '(empty project)'}
         parts: [{ text: prompt }],
       });
 
-      const requestBody = {
-        systemInstruction: {
-          parts: [{ text: systemInstructionText }],
-        },
-        contents,
-        tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
-        generationConfig: {
-          maxOutputTokens: 8192,
-          temperature: 0.2,
-        },
-      };
+      let turn = 0;
+      let shouldContinue = true;
 
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${geminiKey}`;
+      while (shouldContinue && turn < MAX_AGENT_TURNS && !clientDisconnected) {
+        turn++;
 
-      const geminiRes = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
+        const requestBody = {
+          systemInstruction: {
+            parts: [{ text: systemInstructionText }],
+          },
+          contents,
+          tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
+          generationConfig: {
+            maxOutputTokens: 8192,
+            temperature: 0.2,
+          },
+        };
 
-      if (!geminiRes.ok) {
-        const errJson = await geminiRes.json().catch(() => ({}));
-        const msg = errJson.error?.message || `Gemini API returned ${geminiRes.status}`;
-        sendEvent({ type: 'error', error: msg });
-        res.write('data: [DONE]\n\n');
-        return res.end();
-      }
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:streamGenerateContent?alt=sse&key=${geminiKey}`;
 
-      const reader = geminiRes.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '';
+        const geminiRes = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+        if (!geminiRes.ok) {
+          const errJson = await geminiRes.json().catch(() => ({}));
+          const msg = errJson.error?.message || `Gemini API returned ${geminiRes.status}`;
+          sendEvent({ type: 'error', error: msg });
+          break;
+        }
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
+        const reader = geminiRes.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let turnText = '';
+        const functionCallsThisTurn = [];
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const jsonStr = line.slice(6).trim();
-            if (!jsonStr || jsonStr === '[DONE]') continue;
+        while (!clientDisconnected) {
+          const { value, done } = await reader.read();
+          if (done) break;
 
-            try {
-              const data = JSON.parse(jsonStr);
-              const candidate = data.candidates?.[0];
-              const parts = candidate?.content?.parts || [];
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
 
-              for (const part of parts) {
-                if (part.text) {
-                  fullAssistantText += part.text;
-                  sendEvent({ type: 'token', token: part.text });
-                }
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6).trim();
+              if (!jsonStr || jsonStr === '[DONE]') continue;
 
-                if (part.functionCall) {
-                  const fc = part.functionCall;
-                  const name = fc.name;
-                  const args = fc.args || {};
-                  const rawPath = args.path;
-                  const cleanPath = sanitizePath(rawPath);
+              try {
+                const data = JSON.parse(jsonStr);
+                const candidate = data.candidates?.[0];
+                const parts = candidate?.content?.parts || [];
 
-                  if (cleanPath && isValidExtension(cleanPath)) {
-                    if (proposalsCollected.length < MAX_PROPOSALS) {
-                      const isCreate = name === 'propose_create';
-                      const content = isCreate ? args.content || '' : args.newContent || '';
-                      const summary = args.summary || (isCreate ? `Create ${cleanPath}` : `Update ${cleanPath}`);
+                for (const part of parts) {
+                  if (part.text) {
+                    turnText += part.text;
+                    fullAssistantText += part.text;
+                    sendEvent({ type: 'token', token: part.text });
+                  }
 
-                      if (Buffer.byteLength(content, 'utf8') <= MAX_FILE_SIZE) {
-                        const proposal = {
-                          id: `prop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-                          type: isCreate ? 'create' : 'edit',
-                          path: cleanPath,
-                          content,
-                          summary,
-                        };
+                  if (part.functionCall) {
+                    functionCallsThisTurn.push(part.functionCall);
+                    const fc = part.functionCall;
+                    const name = fc.name;
+                    const args = fc.args || {};
+                    const rawPath = args.path;
+                    const cleanPath = sanitizePath(rawPath);
 
-                        proposalsCollected.push(proposal);
-                        sendEvent({ type: 'proposal', proposal });
+                    if (cleanPath && isValidExtension(cleanPath)) {
+                      if (proposalsCollected.length < MAX_PROPOSALS) {
+                        const isCreate = name === 'propose_create';
+                        const content = isCreate ? args.content || '' : args.newContent || '';
+                        const summary = args.summary || (isCreate ? `Create ${cleanPath}` : `Update ${cleanPath}`);
+
+                        if (Buffer.byteLength(content, 'utf8') <= MAX_FILE_SIZE) {
+                          const proposal = {
+                            id: `prop-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                            type: isCreate ? 'create' : 'edit',
+                            path: cleanPath,
+                            content,
+                            summary,
+                          };
+
+                          proposalsCollected.push(proposal);
+                          sendEvent({ type: 'proposal', proposal });
+                        }
                       }
                     }
                   }
                 }
+              } catch (e) {
+                // Ignore malformed chunk
               }
-            } catch (e) {
-              // Ignore malformed chunk
             }
           }
         }
+
+        if (functionCallsThisTurn.length > 0) {
+          // Add model response with function calls
+          contents.push({
+            role: 'model',
+            parts: functionCallsThisTurn.map((fc) => ({ functionCall: fc })),
+          });
+          // Add function response
+          contents.push({
+            role: 'function',
+            parts: functionCallsThisTurn.map((fc) => ({
+              functionResponse: {
+                name: fc.name,
+                response: { output: 'Proposal registered successfully. Continue creating or modifying files.' },
+              },
+            })),
+          });
+          sendEvent({ type: 'token', token: '\n\n' });
+          continue;
+        }
+
+        shouldContinue = false;
       }
     }
 

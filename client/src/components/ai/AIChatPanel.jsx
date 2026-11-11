@@ -106,7 +106,7 @@ export function AIChatPanel() {
           <Sparkles className="w-3.5 h-3.5 text-sky-400" />
           <span className="font-semibold uppercase tracking-wider">AI Assistant</span>
           <span className="text-[10px] bg-sky-500/20 text-sky-300 px-1.5 py-0.2 rounded font-sans">
-            OpenRouter
+            OpenRouter Auto
           </span>
         </div>
 
